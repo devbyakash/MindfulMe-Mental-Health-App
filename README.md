@@ -42,3 +42,7 @@ A tool designed to help users build healthy habits through daily activities.
 -   **Local Storage:** Task completion status is saved in the browser's local storage, allowing progress to persist between sessions.
 
 The project's frontend is styled using **Tailwind CSS**, with custom color variables and fonts ('Inter' and 'Space Grotesk') to create a clean, modern, and cohesive user interface across all pages. JavaScript is used to handle dynamic content, user interactions, and communication with the Supabase backend.
+
+
+https://github.com/user-attachments/assets/def5fed2-6a06-4f88-81af-82b37507e379
+

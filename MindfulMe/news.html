@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health News - MindfulMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #FFFFFF;
+            --primary: #377EC0;
+            --secondary: #5460AC;
+            --accent-teal: #12BAAA;
+            --accent-light: #9FD2D6;
+            --accent-yellow: #FBDF54;
+            --accent-orange: #F7891F;
+            --accent-coral: #F04F52;
+            --text-dark: #2D3748;
+            --text-light: #4A5568;
+            --surface: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(55, 126, 192, 0.1);
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-gradient {
+            background: linear-gradient(135deg,
+                rgba(55, 126, 192, 0.05) 0%,
+                rgba(84, 96, 172, 0.05) 25%,
+                rgba(18, 186, 170, 0.05) 50%,
+                rgba(159, 210, 214, 0.05) 75%,
+                rgba(251, 223, 84, 0.05) 100%
+            );
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-8">
+                    <a href="dashboard.html" class="text-2xl font-bold flex items-center">
+                        <span class="gradient-text">MindfulMe</span>
+                    </a>
+                    <nav class="hidden md:flex items-center space-x-8">
+                        <a href="dashboard.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Dashboard</a>
+                        <a href="mbti.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">MBTI Test</a>
+                        <a href="mood.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Mood Tracker</a>
+                        <a href="news.html" class="nav-link text-primary font-medium">News</a>
+                    </nav>
+                </div>
+                
+                <!-- Profile Icon -->
+                <div class="relative">
+                    <button id="profile-toggle" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium hover:bg-gray-700 transition-colors duration-200">
+                        <span id="user-avatar">U</span>
+                    </button>
+                    
+                    <!-- Profile Dropdown -->
+                    <div id="profile-dropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                        <div class="p-4 border-b border-gray-100">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium">
+                                    <span id="user-avatar-dropdown">U</span>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900" id="user-email">user@example.com</p>
+                                    <p class="text-xs text-gray-500">Signed in</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2">
+                            <button id="logout-button" class="w-full flex items-center justify-center p-3 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="section-gradient min-h-screen py-12">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <!-- Page Header -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Mental Health News</h1>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">Stay informed with the latest research, insights, and stories about mental wellness and personal growth.</p>
+                </div>
+
+                <!-- News Controls -->
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-bold">Latest Articles</h2>
+                        <span class="text-sm text-gray-500" id="news-count">Loading...</span>
+                    </div>
+                    <button id="refresh-news" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Refresh News</span>
+                    </button>
+                </div>
+
+                <!-- News Grid -->
+                <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Loading state -->
+                    <div class="col-span-full flex items-center justify-center py-12">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <span class="ml-4 text-gray-600 text-lg">Loading latest news...</span>
+                    </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="text-center mt-12">
+                    <button id="load-more" class="px-8 py-3 bg-white text-primary border-2 border-primary rounded-lg hover:bg-primary hover:text-white transition-all duration-300 font-semibold">
+                        Load More Articles
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // Initialize Supabase client
+        const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // DOM Elements
+        const userEmail = document.getElementById('user-email');
+        const userAvatar = document.getElementById('user-avatar');
+        const userAvatarDropdown = document.getElementById('user-avatar-dropdown');
+        const logoutButton = document.getElementById('logout-button');
+        const profileToggle = document.getElementById('profile-toggle');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const newsContainer = document.getElementById('news-container');
+        const refreshNewsBtn = document.getElementById('refresh-news');
+        const loadMoreBtn = document.getElementById('load-more');
+        const newsCountEl = document.getElementById('news-count');
+
+        let currentPage = 1;
+        const articlesPerPage = 9;
+
+        // --- LIVE NEWS FUNCTIONALITY ---
+        async function fetchMentalHealthNews(page = 1) {
+            try {
+                // Show loading state
+                if (page === 1) {
+                    newsContainer.innerHTML = `
+                        <div class="col-span-full flex items-center justify-center py-12">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                            <span class="ml-4 text-gray-600 text-lg">Loading latest news...</span>
+                        </div>
+                    `;
+                }
+
+                // Using NewsAPI.org (you'll need to get a free API key from https://newsapi.org/)
+                // For demo purposes, I'll use a fallback with sample data
+                const apiKey = 'YOUR_NEWS_API_KEY'; // Replace with your actual API key
+                const query = 'mental health OR anxiety OR depression OR mindfulness OR meditation';
+                
+                let newsData = [];
+                
+                try {
+                    // Try to fetch from NewsAPI
+                    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=${articlesPerPage}&page=${page}&apiKey=${apiKey}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        newsData = data.articles || [];
+                    } else {
+                        throw new Error('API request failed');
+                    }
+                } catch (error) {
+                    console.log('Using fallback news data');
+                    // Fallback data if API is not available
+                    const fallbackData = [
+                        {
+                            title: 'New Study Shows Meditation Reduces Anxiety by 40%',
+                            description: 'Recent research from Harvard Medical School reveals that daily meditation practice can significantly reduce anxiety symptoms and improve overall mental wellbeing.',
+                            url: 'https://www.health.harvard.edu/mind-and-mood/meditation-for-anxiety-and-depression',
+                            publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Digital Mental Health Tools Show Promise in Treating Depression',
+                            description: 'A comprehensive review of digital mental health interventions shows promising results for treating mild to moderate depression, especially in young adults.',
+                            url: 'https://www.psychiatry.org/News-room/APA-Blogs/Digital-Mental-Health-Tools',
+                            publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Mindfulness in Schools: Students Report Better Focus and Reduced Stress',
+                            description: 'Schools implementing mindfulness programs report improved student focus, reduced stress levels, and better academic performance.',
+                            url: 'https://www.mindful.org/mindfulness-in-education/',
+                            publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'The Connection Between Sleep and Mental Health: New Findings',
+                            description: 'Latest research highlights the crucial relationship between quality sleep and mental health, with sleep deprivation linked to increased anxiety and depression risk.',
+                            url: 'https://www.sleepfoundation.org/mental-health',
+                            publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Nature Therapy: How Outdoor Activities Boost Mental Wellbeing',
+                            description: 'Studies show that spending time in nature can reduce stress hormones, improve mood, and enhance cognitive function.',
+                            url: 'https://www.apa.org/monitor/2020/04/nurtured-nature',
+                            publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'The Science of Gratitude: How Thankfulness Improves Mental Health',
+                            description: 'Research shows that practicing gratitude can lead to better sleep, reduced stress, and improved overall mental health outcomes.',
+                            url: 'https://www.health.harvard.edu/mental-health/giving-thanks-can-make-you-happier',
+                            publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Social Media and Mental Health: Finding the Right Balance',
+                            description: 'New studies explore the impact of social media on mental health and provide strategies for maintaining a healthy relationship with technology.',
+                            url: 'https://www.psychiatry.org/News-room/APA-Blogs/Social-Media-and-Mental-Health',
+                            publishedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Exercise as Medicine: Physical Activity for Mental Health',
+                            description: 'Evidence shows that regular exercise can be as effective as medication for treating mild to moderate depression and anxiety.',
+                            url: 'https://www.health.harvard.edu/mind-and-mood/exercise-is-an-all-natural-treatment-to-fight-depression',
+                            publishedAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'The Power of Positive Thinking: Optimism and Mental Resilience',
+                            description: 'Research demonstrates how cultivating optimism can build mental resilience and improve coping mechanisms during difficult times.',
+                            url: 'https://www.apa.org/monitor/2011/12/optimism',
+                            publishedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        }
+                    ];
+                    
+                    // Simulate pagination for fallback data
+                    const startIndex = (page - 1) * articlesPerPage;
+                    newsData = fallbackData.slice(startIndex, startIndex + articlesPerPage);
+                }
+
+                // Display news articles
+                if (newsData.length > 0) {
+                    const newsHTML = newsData.map(article => {
+                        const timeAgo = getTimeAgo(new Date(article.publishedAt));
+                        const bgColor = getRandomBgColor();
+                        
+                        return `
+                            <div class="news-card p-6">
+                                <div class="flex items-start mb-4">
+                                    <div class="w-16 h-16 rounded-lg ${bgColor} flex-shrink-0 flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4 flex-1">
+                                        <h3 class="font-semibold mb-2 text-lg text-gray-900 line-clamp-2">${article.title}</h3>
+                                        <p class="text-sm text-gray-600 mb-3 line-clamp-3">${article.description}</p>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-500">${timeAgo}</span>
+                                            <a href="${article.url}" target="_blank" class="text-sm text-primary hover:underline font-medium">Read full article →</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    if (page === 1) {
+                        newsContainer.innerHTML = newsHTML;
+                    } else {
+                        newsContainer.insertAdjacentHTML('beforeend', newsHTML);
+                    }
+                    
+                    // Update news count
+                    const totalArticles = page * articlesPerPage;
+                    newsCountEl.textContent = `Showing ${totalArticles} articles`;
+                    
+                    // Show/hide load more button
+                    loadMoreBtn.style.display = newsData.length === articlesPerPage ? 'inline-block' : 'none';
+                } else {
+                    if (page === 1) {
+                        newsContainer.innerHTML = `
+                            <div class="col-span-full text-center py-12">
+                                <p class="text-gray-600 text-lg">No news articles found at the moment.</p>
+                            </div>
+                        `;
+                    }
+                    loadMoreBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                if (page === 1) {
+                    newsContainer.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <p class="text-red-600 text-lg">Failed to load news. Please try again later.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+            return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        }
+
+        function getRandomBgColor() {
+            const colors = ['bg-blue-100', 'bg-green-100', 'bg-purple-100', 'bg-yellow-100', 'bg-pink-100'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Event listeners
+        refreshNewsBtn.addEventListener('click', () => {
+            currentPage = 1;
+            fetchMentalHealthNews(1);
+        });
+
+        loadMoreBtn.addEventListener('click', () => {
+            currentPage++;
+            fetchMentalHealthNews(currentPage);
+        });
+
+        // --- PROFILE DROPDOWN FUNCTIONALITY ---
+        function toggleProfileDropdown() {
+            const isVisible = !profileDropdown.classList.contains('invisible');
+            
+            if (isVisible) {
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            } else {
+                profileDropdown.classList.remove('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.add('opacity-100', 'scale-100');
+            }
+        }
+
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleProfileDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            }
+        });
+
+        function updateUserInfo(email) {
+            const avatar = email ? email[0].toUpperCase() : 'U';
+            userEmail.textContent = email || 'user@example.com';
+            userAvatar.textContent = avatar;
+            userAvatarDropdown.textContent = avatar;
+        }
+
+        // Handle logout
+        logoutButton.addEventListener('click', async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    console.error('Error logging out:', error.message);
+                    alert('Error logging out. Please try again.');
+                } else {
+                    console.log('Successfully logged out');
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                console.error('Error during logout:', err);
+                alert('Error logging out. Please try again.');
+            }
+        });
+
+        // Check authentication status
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            updateUserInfo('Not logged in');
+        } else {
+            updateUserInfo(session.user.email);
+        }
+        
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (!session) {
+                // window.location.href = 'login.html'; 
+            } else {
+                updateUserInfo(session.user.email);
+            }
+        });
+
+        // Fetch news on page load
+        fetchMentalHealthNews(1);
+    </script>
+</body>
+</html> 

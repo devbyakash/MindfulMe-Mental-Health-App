@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindfulMe - Your Mental Wellbeing Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #FFFFFF;
+            --primary: #377EC0;
+            --secondary: #5460AC;
+            --accent-teal: #12BAAA;
+            --accent-light: #9FD2D6;
+            --accent-yellow: #FBDF54;
+            --accent-orange: #F7891F;
+            --accent-coral: #F04F52;
+            --text-dark: #2D3748;
+            --text-light: #4A5568;
+            --surface: #FFFFFF;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        .btn:hover::after {
+            transform: translateX(100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 20px rgba(55, 126, 192, 0.2);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(55, 126, 192, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(55, 126, 192, 0.1);
+            color: var(--primary);
+        }
+        .btn-secondary:hover {
+            background: rgba(55, 126, 192, 0.15);
+            transform: translateY(-2px);
+        }
+        .feature-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: left;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(55, 126, 192, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(55, 126, 192, 0.05), rgba(84, 96, 172, 0.05));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+            border-color: rgba(55, 126, 192, 0.2);
+        }
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(55, 126, 192, 0.1), rgba(84, 96, 172, 0.1));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .testimonial-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(55, 126, 192, 0.1);
+            position: relative;
+        }
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-size: 80px;
+            color: var(--primary);
+            opacity: 0.1;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, 
+                rgba(55, 126, 192, 0.05),
+                rgba(84, 96, 172, 0.05),
+                rgba(18, 186, 170, 0.05)
+            );
+        }
+        /* --- ADDED CANVAS STYLE --- */
+        #motion-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .section-gradient {
+            background: linear-gradient(135deg,
+                rgba(55, 126, 192, 0.05) 0%,
+                rgba(84, 96, 172, 0.05) 25%,
+                rgba(18, 186, 170, 0.05) 50%,
+                rgba(159, 210, 214, 0.05) 75%,
+                rgba(251, 223, 84, 0.05) 100%
+            );
+        }
+
+        /* --- ANIMATION STYLES --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .is-visible {
+            opacity: 1;
+            transform: none;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass-card">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="#" class="text-2xl font-bold flex items-center">
+                    <span class="gradient-text">MindfulMe</span>
+                </a>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Features</a>
+                    <a href="#how-it-works" class="nav-link text-gray-600 hover:text-gray-900 font-medium">How It Works</a>
+                    <a href="#testimonials" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Testimonials</a>
+                    <a id="get-started-nav" href="index.html" class="btn btn-primary">Get Started</a>
+                </nav>
+                <button class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-16 6h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative py-20 md:py-32 overflow-hidden hero-gradient">
+            <!-- ADDED CANVAS FOR MOTION GRAPHICS -->
+            <canvas id="motion-canvas"></canvas>
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h1 class="text-5xl md:text-7xl font-bold leading-tight mb-8 animate-on-scroll" data-animation-delay="0">
+                        Your Journey to<br><span class="gradient-text">Mental Wellness</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" data-animation-delay="200">
+                        Track your mood, discover your personality, and find your path to better mental health.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center animate-on-scroll" data-animation-delay="400">
+                        <a id="get-started-hero" href="index.html" class="btn btn-primary">Get Started Now</a>
+                        <a href="#features" class="btn btn-secondary">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-on-scroll">Your Complete Mental Wellness Toolkit</h2>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto animate-on-scroll" data-animation-delay="200">Everything you need for your mental health journey, all in one place.</p>
+                </div>
+                <div class="feature-grid">
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--primary)" data-animation-delay="0">
+                        <div class="feature-icon">
+                           <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Daily Mood Tracker</h3>
+                        <p class="text-gray-600">Track your emotional journey with our intuitive mood tracker. Identify patterns and triggers.</p>
+                    </div>
+
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--secondary)" data-animation-delay="100">
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Personal Dashboard</h3>
+                        <p class="text-gray-600">Your personalized command center for mental wellness. Track progress and celebrate achievements.</p>
+                    </div>
+
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--accent-teal)" data-animation-delay="200">
+                        <div class="feature-icon">
+                           <svg class="w-8 h-8 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">MBTI Personality Insights</h3>
+                        <p class="text-gray-600">Get personalized mental wellness strategies based on your personality type.</p>
+                    </div>
+
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--accent-light)" data-animation-delay="300">
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-accent-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Mental Health News</h3>
+                        <p class="text-gray-600">Stay informed with the latest research and get inspired by uplifting stories.</p>
+                    </div>
+
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--accent-yellow)" data-animation-delay="400">
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-accent-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8v4l3 3"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Meditation & Mindfulness</h3>
+                        <p class="text-gray-600">Access guided meditations and mindfulness practices for mental clarity.</p>
+                    </div>
+
+                    <div class="feature-card animate-on-scroll" style="border-top: 4px solid var(--accent-coral)" data-animation-delay="500">
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-accent-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Daily Wellbeing Tasks</h3>
+                        <p class="text-gray-600">Engage in personalized activities designed to boost your mental health.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it Works -->
+        <section id="how-it-works" class="py-24 section-gradient">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-on-scroll">Your Path to Better Mental Health</h2>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto animate-on-scroll" data-animation-delay="200">Three simple steps to start your wellness journey</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-12">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm animate-on-scroll" style="border-left: 4px solid var(--primary)" data-animation-delay="0">
+                        <div class="w-16 h-16 flex items-center justify-center bg-blue-100 rounded-2xl mb-6">
+                            <span class="text-2xl font-bold" style="color: var(--primary)">1</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Take the MBTI Test</h3>
+                        <p class="text-gray-600">Discover your personality type and get personalized recommendations.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm animate-on-scroll" style="border-left: 4px solid var(--accent-teal)" data-animation-delay="200">
+                        <div class="w-16 h-16 flex items-center justify-center rounded-2xl mb-6" style="background: rgba(18, 186, 170, 0.1)">
+                            <span class="text-2xl font-bold" style="color: var(--accent-teal)">2</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Set Your Goals</h3>
+                        <p class="text-gray-600">Choose your focus areas and create your personalized wellness plan.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm animate-on-scroll" style="border-left: 4px solid var(--accent-coral)" data-animation-delay="400">
+                        <div class="w-16 h-16 flex items-center justify-center rounded-2xl mb-6" style="background: rgba(240, 79, 82, 0.1)">
+                            <span class="text-2xl font-bold" style="color: var(--accent-coral)">3</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">Track & Grow</h3>
+                        <p class="text-gray-600">Follow your daily tasks, track your progress, and celebrate improvements.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section id="testimonials" class="py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-on-scroll">Stories from Our Community</h2>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto animate-on-scroll" data-animation-delay="200">Real people, real transformations</p>
+                </div>
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="testimonial-card animate-on-scroll" data-animation-delay="0">
+                        <p class="text-lg text-gray-700 mb-6">"The MBTI insights and personalized recommendations have helped me understand myself better. The daily tasks are perfectly aligned with my personality type!"</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(55, 126, 192, 0.1)">
+                                <span class="text-xl font-bold" style="color: var(--primary)">S</span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="font-bold text-gray-900">Sarah M.</div>
+                                <div class="text-sm text-gray-500">INFJ Type</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card animate-on-scroll" data-animation-delay="200">
+                        <p class="text-lg text-gray-700 mb-6">"The meditation features and community support have been crucial in managing my anxiety. I feel more in control of my mental health now."</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(18, 186, 170, 0.1)">
+                                <span class="text-xl font-bold" style="color: var(--accent-teal)">J</span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="font-bold text-gray-900">James R.</div>
+                                <div class="text-sm text-gray-500">ENTP Type</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card animate-on-scroll" data-animation-delay="400">
+                        <p class="text-lg text-gray-700 mb-6">"Tracking my mood daily has helped me identify patterns I never noticed before. The wellbeing tasks keep me motivated and accountable."</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(240, 79, 82, 0.1)">
+                                <span class="text-xl font-bold" style="color: var(--accent-coral)">L</span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="font-bold text-gray-900">Lisa K.</div>
+                                <div class="text-sm text-gray-500">ISFP Type</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="py-24 section-gradient">
+            <div class="container mx-auto px-6">
+                <div class="bg-white p-12 rounded-3xl shadow-sm text-center relative overflow-hidden animate-on-scroll">
+                    <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent-teal/5"></div>
+                    <div class="relative z-10">
+                        <h2 class="text-4xl md:text-5xl font-bold mb-6">Begin Your Wellness Journey Today</h2>
+                        <p class="text-xl text-gray-600 mb-8 max-w-xl mx-auto">Join thousands of others who have transformed their mental wellbeing with MindfulMe.</p>
+                        <a id="get-started-cta" href="index.html" class="btn btn-primary">Start Free Trial</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-16">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12">
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-4">MindfulMe</h3>
+                    <p class="text-sm">Your companion for mental wellness and personal growth.</p>
+                </div>
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-4">Features</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Mood Tracking</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">MBTI Test</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Meditation</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Community</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Mental Health Blog</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Meditation Guides</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Personality Types</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+                <p>&copy; 2025 MindfulMe. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT FOR AUTH CHECK AND ANIMATIONS -->
+    <script type="module">
+        // --- SUPABASE AUTH CHECK ---
+        const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        const getStartedNav = document.getElementById('get-started-nav');
+        const getStartedHero = document.getElementById('get-started-hero');
+        const getStartedCta = document.getElementById('get-started-cta');
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (session) {
+            if(getStartedNav) getStartedNav.href = 'dashboard.html';
+            if(getStartedHero) getStartedHero.href = 'dashboard.html';
+            if(getStartedCta) getStartedCta.href = 'dashboard.html';
+        } 
+
+        // --- SCROLL ANIMATION LOGIC ---
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = entry.target.getAttribute('data-animation-delay') || 0;
+                    setTimeout(() => {
+                        entry.target.classList.add('is-visible');
+                    }, parseInt(delay));
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        animatedElements.forEach(el => observer.observe(el));
+
+        // --- MOTION GRAPHICS CANVAS LOGIC ---
+        const canvas = document.getElementById('motion-canvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+
+        // Get mouse position
+        let mouse = {
+            x: null,
+            y: null,
+            radius: (canvas.height / 80) * (canvas.width / 80)
+        };
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Particle class
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        // Create particle array
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            mouse.radius = (canvas.height / 100) * (canvas.width / 100);
+
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            const themeColors = ['#377EC0', '#5460AC', '#12BAAA', '#9FD2D6'];
+
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 3) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                let color = themeColors[Math.floor(Math.random() * themeColors.length)];
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        // Connect particles
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) +
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = `rgba(55, 126, 192, ${opacityValue})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        // Window resize event
+        window.addEventListener('resize', () => {
+            init();
+        });
+
+        // Mouse out event
+        window.addEventListener('mouseout', () => {
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

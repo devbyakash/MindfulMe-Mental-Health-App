@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindfulMe - Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #FFFFFF;
+            --primary: #377EC0;
+            --secondary: #5460AC;
+            --accent-teal: #12BAAA;
+            --accent-light: #9FD2D6;
+            --accent-yellow: #FBDF54;
+            --accent-orange: #F7891F;
+            --accent-coral: #F04F52;
+            --text-dark: #2D3748;
+            --text-light: #4A5568;
+            --surface: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            border: 2px solid var(--text-dark);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(55, 126, 192, 0.1);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(55, 126, 192, 0.3);
+        }
+
+        .auth-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        .auth-button:hover::after {
+            transform: translateX(100%);
+        }
+
+        .auth-link {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .auth-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .auth-link:hover::after {
+            transform: scaleX(1);
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(55, 126, 192, 0.1);
+            overflow: hidden;
+        }
+
+        .message-box {
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .message-box.error {
+            background: rgba(240, 79, 82, 0.1);
+            color: var(--accent-coral);
+            border: 1px solid var(--accent-coral);
+        }
+
+        .message-box.success {
+            background: rgba(18, 186, 170, 0.1);
+            color: var(--accent-teal);
+            border: 1px solid var(--accent-teal);
+        }
+
+        .section-gradient {
+            background: linear-gradient(135deg,
+                rgba(55, 126, 192, 0.05) 0%,
+                rgba(84, 96, 172, 0.05) 25%,
+                rgba(18, 186, 170, 0.05) 50%,
+                rgba(159, 210, 214, 0.05) 75%,
+                rgba(251, 223, 84, 0.05) 100%
+            );
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper svg {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .input-wrapper svg:hover {
+            color: var(--primary);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen section-gradient">
+    <div class="min-h-screen flex flex-col items-center justify-center p-8">
+        <div class="w-full max-w-md">
+            <!-- Main Auth Container -->
+            <div id="auth-container">
+                <!-- Auth Forms -->
+                <div id="auth-forms" class="auth-container p-8 space-y-8">
+                    <!-- Login Form -->
+                    <div id="login-form-container">
+                        <h2 class="text-3xl font-bold mb-8 text-center">
+                            Welcome to <span class="gradient-text">MindfulMe</span>
+                        </h2>
+                        <form id="login-form" class="space-y-6">
+                            <div class="input-wrapper">
+                                <input type="email" id="login-email" placeholder="Email" required class="auth-input">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="password" id="login-password" placeholder="Password" required class="auth-input">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </div>
+                            <button type="submit" class="auth-button">
+                                <span>Login</span>
+                            </button>
+                        </form>
+                        <p class="text-center mt-6 text-gray-600">
+                            Don't have an account?
+                            <a href="#" id="show-signup" class="auth-link">Create Account</a>
+                        </p>
+                    </div>
+
+                    <!-- Sign Up Form -->
+                    <div id="signup-form-container" class="hidden">
+                        <h2 class="text-3xl font-bold mb-8 text-center">
+                            Join <span class="gradient-text">MindfulMe</span>
+                        </h2>
+                        <form id="signup-form" class="space-y-6">
+                            <div class="input-wrapper">
+                                <input type="email" id="signup-email" placeholder="Email" required class="auth-input">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="password" id="signup-password" placeholder="Password" required class="auth-input">
+                                <span id="toggle-signup-password" class="cursor-pointer">
+                                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <svg id="eye-off-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                </span>
+                            </div>
+                            <button type="submit" class="auth-button">
+                                <span>Create Account</span>
+                            </button>
+                        </form>
+                        <p class="text-center mt-6 text-gray-600">
+                            Already have an account?
+                            <a href="#" id="show-login" class="auth-link">Login</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- User Profile Section -->
+                <div id="user-profile" class="hidden auth-container p-8 text-center">
+                    <h2 class="text-3xl font-bold mb-6">Welcome Back!</h2>
+                    <p class="text-xl mb-8 text-gray-600">You are logged in as <span id="user-email" class="font-semibold text-primary"></span></p>
+                    <button id="logout-button" class="auth-button" style="background: linear-gradient(135deg, var(--accent-coral), var(--accent-orange));">
+                        <span>Logout</span>
+                    </button>
+                </div>
+
+                <!-- Message Box -->
+                <div id="message-box" class="hidden message-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Keeping all the existing JavaScript code unchanged
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const logoutButton = document.getElementById('logout-button');
+        const authForms = document.getElementById('auth-forms');
+        const loginFormContainer = document.getElementById('login-form-container');
+        const signupFormContainer = document.getElementById('signup-form-container');
+        const userProfile = document.getElementById('user-profile');
+        const userEmailSpan = document.getElementById('user-email');
+        const messageBox = document.getElementById('message-box');
+        const showSignupLink = document.getElementById('show-signup');
+        const showLoginLink = document.getElementById('show-login');
+        const signupPasswordInput = document.getElementById('signup-password');
+        const togglePasswordIcon = document.getElementById('toggle-signup-password');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeOffIcon = document.getElementById('eye-off-icon');
+
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        function updateUserUI(user) {
+            if (user) {
+                authForms.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                userEmailSpan.textContent = user.email;
+            } else {
+                authForms.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+            }
+        }
+
+        showSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginFormContainer.classList.add('hidden');
+            signupFormContainer.classList.remove('hidden');
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupFormContainer.classList.add('hidden');
+            loginFormContainer.classList.remove('hidden');
+        });
+
+        togglePasswordIcon.addEventListener('click', () => {
+            const isPassword = signupPasswordInput.type === 'password';
+            signupPasswordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', isPassword);
+            eyeOffIcon.classList.toggle('hidden', !isPassword);
+        });
+
+        signupForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = signupPasswordInput.value;
+
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+            if (!passwordRegex.test(password)) {
+                showMessage('Password must be 8+ characters with a letter, number, and special character (@$!%*?&)', 'error');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signUp({ email, password });
+
+            if (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } else {
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    showMessage('Signup successful! Please check your email to confirm your account.', 'success');
+                } else {
+                    showMessage('Signup successful! You are now logged in.', 'success');
+                }
+            }
+            signupForm.reset();
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } else {
+                showMessage('Login successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            }
+            loginForm.reset();
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } else {
+                updateUserUI(null);
+                showMessage('Logged out successfully', 'success');
+            }
+        });
+
+        // Check initial auth state
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                updateUserUI(session.user);
+            } else {
+                updateUserUI(null);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindfulMe - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #FFFFFF;
+            --primary: #377EC0;
+            --secondary: #5460AC;
+            --accent-teal: #12BAAA;
+            --accent-light: #9FD2D6;
+            --accent-yellow: #FBDF54;
+            --accent-orange: #F7891F;
+            --accent-coral: #F04F52;
+            --text-dark: #2D3748;
+            --text-light: #4A5568;
+            --surface: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(55, 126, 192, 0.1);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(55, 126, 192, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-gradient {
+            background: linear-gradient(135deg,
+                rgba(55, 126, 192, 0.05) 0%,
+                rgba(84, 96, 172, 0.05) 25%,
+                rgba(18, 186, 170, 0.05) 50%,
+                rgba(159, 210, 214, 0.05) 75%,
+                rgba(251, 223, 84, 0.05) 100%
+            );
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-2xl font-bold gradient-text">MindfulMe</h1>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="sidebar-item active flex items-center p-3 text-sm font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Dashboard
+                </a>
+
+                <a href="mbti.html" class="sidebar-item flex items-center p-3 text-sm font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    MBTI Test
+                </a>
+
+                <a href="news.html" class="sidebar-item flex items-center p-3 text-sm font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                    </svg>
+                    News & Updates
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center p-3 text-sm font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    Community
+                </a>
+
+                <a href="task.html" class="sidebar-item flex items-center p-3 text-sm font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    Wellbeing Tasks
+                </a>
+            </nav>
+
+            <!-- Spacer to push profile to bottom -->
+            <div class="flex-1"></div>
+        </aside>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto section-gradient p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header with Profile -->
+                <header class="mb-8 flex justify-between items-start">
+                    <div>
+                        <h1 class="text-3xl font-bold">Welcome Back!</h1>
+                        <p class="text-gray-600">Here's your mental wellness overview</p>
+                    </div>
+                    
+                    <!-- Profile Icon -->
+                    <div class="relative">
+                        <button id="profile-toggle" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium hover:bg-gray-700 transition-colors duration-200">
+                            <span id="user-avatar">U</span>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profile-dropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                            <div class="p-4 border-b border-gray-100">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium">
+                                        <span id="user-avatar-dropdown">U</span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900" id="user-email">user@example.com</p>
+                                        <p class="text-xs text-gray-500">Signed in</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-2">
+                                <button id="logout-button" class="w-full flex items-center justify-center p-3 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold">MBTI Profile</h3>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="mbti-profile-result" class="text-3xl font-bold mb-2">Loading...</p>
+                        <a href="mbti.html" class="text-primary text-sm hover:underline">Take test →</a>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold">Mood Tracker</h3>
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="current-mood" class="text-3xl font-bold mb-2">Loading...</p>
+                        <a href="mood.html" class="text-accent-teal text-sm hover:underline">Update mood →</a>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold">Meditation Player</h3>
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Now Playing</span>
+                                <span class="text-xs text-gray-500" id="current-time">0:00</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full" id="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="flex items-center justify-center space-x-4">
+                                <button id="prev-btn" class="p-2 rounded-full bg-purple-100 hover:bg-purple-200 transition-colors">
+                                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <button id="play-pause-btn" class="p-3 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="play-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <svg class="w-5 h-5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="pause-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path>
+                                    </svg>
+                                </button>
+                                <button id="next-btn" class="p-2 rounded-full bg-purple-100 hover:bg-purple-200 transition-colors">
+                                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-600 text-center" id="track-title">Peaceful Meditation</p>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold">Calendar</h3>
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div id="calendar-container" class="mb-3">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                        <p class="text-sm text-gray-600 text-center" id="current-date">Today</p>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Latest News -->
+                    <div class="lg:col-span-2">
+                        <div class="card p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold">Latest Mental Health News</h2>
+                                <button id="refresh-news" class="p-2 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors">
+                                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                </button>
+                                    </div>
+                            <div id="news-container" class="space-y-6">
+                                <div class="flex items-center justify-center py-8">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                    <span class="ml-3 text-gray-600">Loading latest news...</span>
+                                </div>
+                            </div>
+                            <a href="news.html" class="block mt-6 text-primary hover:underline text-sm">View all news →</a>
+                        </div>
+                    </div>
+
+                    <!-- Wellbeing Tasks -->
+                    <div class="lg:col-span-1">
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-6">Today's Tasks</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                    <span class="ml-3 text-sm">10 minutes meditation</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                    <span class="ml-3 text-sm">Write in gratitude journal</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary" checked>
+                                    <span class="ml-3 text-sm line-through text-gray-400">Morning walk</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                    <span class="ml-3 text-sm">Read for 15 minutes</span>
+                                </div>
+                            </div>
+                            <a href="task.html" class="block mt-6 text-primary hover:underline text-sm">View all tasks →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        // Initialize Supabase client
+        const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // DOM Elements
+        const userEmail = document.getElementById('user-email');
+        const userAvatar = document.getElementById('user-avatar');
+        const userAvatarDropdown = document.getElementById('user-avatar-dropdown');
+        const logoutButton = document.getElementById('logout-button');
+        const profileToggle = document.getElementById('profile-toggle');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const mbtiResultEl = document.getElementById('mbti-profile-result');
+        const currentMoodEl = document.getElementById('current-mood');
+        
+        // Meditation Player Elements
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const trackTitleEl = document.getElementById('track-title');
+        
+        // News Elements
+        const newsContainer = document.getElementById('news-container');
+        const refreshNewsBtn = document.getElementById('refresh-news');
+        
+        // Calendar Elements
+        const calendarContainer = document.getElementById('calendar-container');
+        const currentDateEl = document.getElementById('current-date');
+
+        // --- FUNCTION TO FETCH MBTI RESULT ---
+        async function fetchLatestMbtiResult() {
+            try {
+                // Fetch the most recent result from the table
+                const { data, error } = await supabaseClient
+                    .from('mbti_results')
+                    .select('result')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single(); // .single() returns one object instead of an array
+
+                if (error) {
+                    if (error.code === 'PGRST116') { // PostgREST error for "Not a single row"
+                         mbtiResultEl.textContent = 'No test taken';
+                    } else {
+                        console.error('Error fetching MBTI result:', error.message);
+                        mbtiResultEl.textContent = 'Not found';
+                    }
+                    return;
+                }
+
+                if (data && data.result) {
+                    mbtiResultEl.textContent = data.result;
+                } else {
+                    mbtiResultEl.textContent = 'No test taken';
+                }
+            } catch (err) {
+                console.error('Error in fetchLatestMbtiResult:', err);
+                mbtiResultEl.textContent = 'Error';
+            }
+        }
+
+        // --- FUNCTION TO FETCH LATEST MOOD ---
+        async function fetchLatestMood() {
+            try {
+                // Fetch the most recent mood from the table
+                const { data, error } = await supabaseClient
+                    .from('mood_entries')
+                    .select('mood, emoji')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') { // PostgREST error for "Not a single row"
+                        currentMoodEl.textContent = 'No mood recorded';
+                    } else {
+                        console.error('Error fetching mood:', error.message);
+                        currentMoodEl.textContent = 'Not found';
+                    }
+                    return;
+                }
+
+                if (data) {
+                    // Display mood name with emoji
+                    const moodText = data.mood ? `${data.emoji} ${data.mood}` : 'Unknown';
+                    currentMoodEl.textContent = moodText;
+                } else {
+                    currentMoodEl.textContent = 'No mood recorded';
+                }
+            } catch (err) {
+                console.error('Error in fetchLatestMood:', err);
+                currentMoodEl.textContent = 'Error';
+            }
+        }
+
+        // Check authentication status
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            // For demonstration, we'll just show a default state.
+            // In a real app, you would redirect: window.location.href = 'login.html';
+            userEmail.textContent = 'Not logged in';
+            userAvatar.textContent = '?';
+            mbtiResultEl.textContent = 'N/A';
+            currentMoodEl.textContent = 'N/A';
+        } else {
+            userEmail.textContent = session.user.email;
+            userAvatar.textContent = session.user.email[0].toUpperCase();
+            fetchLatestMbtiResult();
+            fetchLatestMood();
+        }
+        
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (!session) {
+                // window.location.href = 'login.html'; 
+            } else {
+                userEmail.textContent = session.user.email;
+                userAvatar.textContent = session.user.email[0].toUpperCase();
+                if (event === 'SIGNED_IN') {
+                    fetchLatestMbtiResult();
+                    fetchLatestMood();
+                }
+            }
+        });
+
+        // Handle logout
+        logoutButton.addEventListener('click', async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    console.error('Error logging out:', error.message);
+                    alert('Error logging out. Please try again.');
+                } else {
+                    console.log('Successfully logged out');
+                    // Redirect to index page after successful logout
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                console.error('Error during logout:', err);
+                alert('Error logging out. Please try again.');
+            }
+        });
+
+        // --- MEDITATION PLAYER FUNCTIONALITY ---
+        const meditationTracks = [
+            {
+                title: 'Morning in the Forest',
+                audioUrl: 'C:/Users/offic/Downloads/Music/morning-in-the-forest-347089.mp3',
+                duration: 300 // 5 minutes in seconds
+            },
+            {
+                title: 'Peaceful Meditation',
+                audioUrl: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+                duration: 300 // 5 minutes in seconds
+            },
+            {
+                title: 'Nature Sounds',
+                audioUrl: 'https://www.soundjay.com/misc/sounds/rain-01.wav',
+                duration: 600 // 10 minutes in seconds
+            },
+            {
+                title: 'Calm Breathing',
+                audioUrl: 'https://www.soundjay.com/misc/sounds/wind-1.wav',
+                duration: 180 // 3 minutes in seconds
+            }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        let currentTime = 0;
+        let audio = null;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgress() {
+            if (audio && !audio.paused) {
+                currentTime = audio.currentTime;
+                const progress = (currentTime / audio.duration) * 100;
+                progressBar.style.width = `${progress}%`;
+                currentTimeEl.textContent = formatTime(currentTime);
+            }
+        }
+
+        function loadTrack(index) {
+            if (audio) {
+                audio.pause();
+                audio = null;
+            }
+            
+            const track = meditationTracks[index];
+            trackTitleEl.textContent = track.title;
+            currentTime = 0;
+            progressBar.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+            
+            // Create new audio element
+            audio = new Audio(track.audioUrl);
+            audio.addEventListener('loadedmetadata', () => {
+                audio.duration = track.duration;
+            });
+            
+            // Update progress every 100ms
+            setInterval(updateProgress, 100);
+        }
+
+        function togglePlayPause() {
+            if (!audio) {
+                loadTrack(currentTrackIndex);
+            }
+            
+            if (isPlaying) {
+                audio.pause();
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            } else {
+                audio.play();
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function playNext() {
+            currentTrackIndex = (currentTrackIndex + 1) % meditationTracks.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) {
+                audio.play();
+            }
+        }
+
+        function playPrevious() {
+            currentTrackIndex = (currentTrackIndex - 1 + meditationTracks.length) % meditationTracks.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) {
+                audio.play();
+            }
+        }
+
+        // Event listeners for meditation player
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        nextBtn.addEventListener('click', playNext);
+        prevBtn.addEventListener('click', playPrevious);
+
+        // Initialize the player
+        loadTrack(currentTrackIndex);
+
+        // --- LIVE NEWS FUNCTIONALITY ---
+        async function fetchMentalHealthNews() {
+            try {
+                // Show loading state
+                newsContainer.innerHTML = `
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <span class="ml-3 text-gray-600">Loading latest news...</span>
+                    </div>
+                `;
+
+                // Using NewsAPI.org (you'll need to get a free API key from https://newsapi.org/)
+                // For demo purposes, I'll use a fallback with sample data
+                const apiKey = 'YOUR_NEWS_API_KEY'; // Replace with your actual API key
+                const query = 'mental health OR anxiety OR depression OR mindfulness OR meditation';
+                
+                let newsData = [];
+                
+                try {
+                    // Try to fetch from NewsAPI
+                    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=5&apiKey=${apiKey}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        newsData = data.articles || [];
+                    } else {
+                        throw new Error('API request failed');
+                    }
+                } catch (error) {
+                    console.log('Using fallback news data');
+                    // Fallback data if API is not available
+                    newsData = [
+                        {
+                            title: 'New Study Shows Meditation Reduces Anxiety by 40%',
+                            description: 'Recent research from Harvard Medical School reveals that daily meditation practice can significantly reduce anxiety symptoms and improve overall mental wellbeing.',
+                            url: 'https://www.health.harvard.edu/mind-and-mood/meditation-for-anxiety-and-depression',
+                            publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Digital Mental Health Tools Show Promise in Treating Depression',
+                            description: 'A comprehensive review of digital mental health interventions shows promising results for treating mild to moderate depression, especially in young adults.',
+                            url: 'https://www.psychiatry.org/News-room/APA-Blogs/Digital-Mental-Health-Tools',
+                            publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Mindfulness in Schools: Students Report Better Focus and Reduced Stress',
+                            description: 'Schools implementing mindfulness programs report improved student focus, reduced stress levels, and better academic performance.',
+                            url: 'https://www.mindful.org/mindfulness-in-education/',
+                            publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'The Connection Between Sleep and Mental Health: New Findings',
+                            description: 'Latest research highlights the crucial relationship between quality sleep and mental health, with sleep deprivation linked to increased anxiety and depression risk.',
+                            url: 'https://www.sleepfoundation.org/mental-health',
+                            publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        },
+                        {
+                            title: 'Nature Therapy: How Outdoor Activities Boost Mental Wellbeing',
+                            description: 'Studies show that spending time in nature can reduce stress hormones, improve mood, and enhance cognitive function.',
+                            url: 'https://www.apa.org/monitor/2020/04/nurtured-nature',
+                            publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+                            urlToImage: null
+                        }
+                    ];
+                }
+
+                // Display news articles
+                if (newsData.length > 0) {
+                    const newsHTML = newsData.map(article => {
+                        const timeAgo = getTimeAgo(new Date(article.publishedAt));
+                        const bgColor = getRandomBgColor();
+                        
+                        return `
+                            <div class="flex items-start">
+                                <div class="w-16 h-16 rounded-lg ${bgColor} flex-shrink-0 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-semibold mb-1 text-gray-900">${article.title}</h3>
+                                    <p class="text-sm text-gray-600 mb-2">${article.description}</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">${timeAgo}</span>
+                                        <a href="${article.url}" target="_blank" class="text-xs text-primary hover:underline">Read more →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    newsContainer.innerHTML = newsHTML;
+                } else {
+                    newsContainer.innerHTML = `
+                        <div class="text-center py-8">
+                            <p class="text-gray-600">No news articles found at the moment.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                newsContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-600">Failed to load news. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+            return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        }
+
+        function getRandomBgColor() {
+            const colors = ['bg-blue-100', 'bg-green-100', 'bg-purple-100', 'bg-yellow-100', 'bg-pink-100'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Event listener for refresh button
+        refreshNewsBtn.addEventListener('click', fetchMentalHealthNews);
+
+        // Fetch news on page load
+        fetchMentalHealthNews();
+
+        // --- CALENDAR FUNCTIONALITY ---
+        function generateCalendar() {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            const currentDay = today.getDate();
+            
+            // Get month name
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            
+            // Create calendar HTML
+            let calendarHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-sm font-semibold text-gray-700">${monthNames[currentMonth]} ${currentYear}</div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-xs">
+            `;
+            
+            // Add day headers
+            const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            dayHeaders.forEach(day => {
+                calendarHTML += `<div class="text-center text-gray-500 font-medium py-1">${day}</div>`;
+            });
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDay; i++) {
+                calendarHTML += `<div class="py-1"></div>`;
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = day === currentDay;
+                const dayClass = isToday 
+                    ? 'bg-orange-500 text-white rounded-full font-semibold' 
+                    : 'text-gray-700 hover:bg-gray-100 rounded-full';
+                
+                calendarHTML += `
+                    <div class="text-center py-1 ${dayClass} cursor-pointer transition-colors">
+                        ${day}
+                    </div>
+                `;
+            }
+            
+            calendarHTML += '</div>';
+            calendarContainer.innerHTML = calendarHTML;
+            
+            // Update current date display
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateEl.textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        // Generate calendar on page load
+        generateCalendar();
+
+        // --- PROFILE DROPDOWN FUNCTIONALITY ---
+        function toggleProfileDropdown() {
+            const isVisible = !profileDropdown.classList.contains('invisible');
+            
+            if (isVisible) {
+                // Hide dropdown
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            } else {
+                // Show dropdown
+                profileDropdown.classList.remove('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.add('opacity-100', 'scale-100');
+            }
+        }
+
+        // Toggle dropdown when profile icon is clicked
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleProfileDropdown();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            }
+        });
+
+        // Update user info in both places
+        function updateUserInfo(email) {
+            const avatar = email ? email[0].toUpperCase() : 'U';
+            userEmail.textContent = email || 'user@example.com';
+            userAvatar.textContent = avatar;
+            userAvatarDropdown.textContent = avatar;
+        }
+
+        // Update the authentication status check to use the new function
+        if (!session) {
+            // For demonstration, we'll just show a default state.
+            // In a real app, you would redirect: window.location.href = 'login.html';
+            updateUserInfo('Not logged in');
+            mbtiResultEl.textContent = 'N/A';
+            currentMoodEl.textContent = 'N/A';
+        } else {
+            updateUserInfo(session.user.email);
+            fetchLatestMbtiResult();
+            fetchLatestMood();
+        }
+        
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (!session) {
+                // window.location.href = 'login.html'; 
+            } else {
+                updateUserInfo(session.user.email);
+                if (event === 'SIGNED_IN') {
+                    fetchLatestMbtiResult();
+                    fetchLatestMood();
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

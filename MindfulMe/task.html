@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Tasks - MindfulMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #FFFFFF;
+            --primary: #377EC0;
+            --secondary: #5460AC;
+            --accent-teal: #12BAAA;
+            --accent-light: #9FD2D6;
+            --accent-yellow: #FBDF54;
+            --accent-orange: #F7891F;
+            --accent-coral: #F04F52;
+            --text-dark: #2D3748;
+            --text-light: #4A5568;
+            --surface: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(55, 126, 192, 0.1);
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .task-card.completed {
+            border-color: var(--accent-teal);
+            background: rgba(18, 186, 170, 0.02);
+        }
+
+        .section-gradient {
+            background: linear-gradient(135deg,
+                rgba(55, 126, 192, 0.05) 0%,
+                rgba(84, 96, 172, 0.05) 25%,
+                rgba(18, 186, 170, 0.05) 50%,
+                rgba(159, 210, 214, 0.05) 75%,
+                rgba(251, 223, 84, 0.05) 100%
+            );
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-8">
+                    <a href="dashboard.html" class="text-2xl font-bold flex items-center">
+                        <span class="gradient-text">MindfulMe</span>
+                    </a>
+                    <nav class="hidden md:flex items-center space-x-8">
+                        <a href="dashboard.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Dashboard</a>
+                        <a href="mbti.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">MBTI Test</a>
+                        <a href="mood.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Mood Tracker</a>
+                        <a href="news.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">News</a>
+                        <a href="task.html" class="nav-link text-primary font-medium">Tasks</a>
+                    </nav>
+                </div>
+                
+                <!-- Profile Icon -->
+                <div class="relative">
+                    <button id="profile-toggle" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium hover:bg-gray-700 transition-colors duration-200">
+                        <span id="user-avatar">U</span>
+                    </button>
+                    
+                    <!-- Profile Dropdown -->
+                    <div id="profile-dropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                        <div class="p-4 border-b border-gray-100">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-medium">
+                                    <span id="user-avatar-dropdown">U</span>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900" id="user-email">user@example.com</p>
+                                    <p class="text-xs text-gray-500">Signed in</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2">
+                            <button id="logout-button" class="w-full flex items-center justify-center p-3 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="section-gradient min-h-screen py-12">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <!-- Page Header -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Mental Health Tasks</h1>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">Complete these daily tasks to improve your mental wellbeing and build healthy habits.</p>
+                </div>
+
+                <!-- Progress Overview -->
+                <div class="bg-white rounded-2xl shadow-sm p-8 mb-12">
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="text-center md:text-left mb-6 md:mb-0">
+                            <h2 class="text-2xl font-bold mb-2">Today's Progress</h2>
+                            <p class="text-gray-600">Track your daily mental health activities</p>
+                        </div>
+                        <div class="flex items-center space-x-8">
+                            <div class="text-center">
+                                <div class="relative w-20 h-20">
+                                    <svg class="w-20 h-20 progress-ring">
+                                        <circle
+                                            cx="40"
+                                            cy="40"
+                                            r="36"
+                                            stroke="#E5E7EB"
+                                            stroke-width="8"
+                                            fill="transparent"
+                                        />
+                                        <circle
+                                            id="progress-circle"
+                                            cx="40"
+                                            cy="40"
+                                            r="36"
+                                            stroke="#377EC0"
+                                            stroke-width="8"
+                                            fill="transparent"
+                                            stroke-dasharray="226.19"
+                                            stroke-dashoffset="226.19"
+                                            class="progress-ring-circle"
+                                        />
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span id="progress-text" class="text-lg font-bold text-gray-700">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-primary" id="completed-count">0</div>
+                                <div class="text-sm text-gray-600">of 10 completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="tasks-container">
+                    <!-- Tasks will be generated here -->
+                </div>
+
+                <!-- Reset Button -->
+                <div class="text-center mt-12">
+                    <button id="reset-tasks" class="px-8 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold">
+                        Reset All Tasks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // Initialize Supabase client
+        const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // DOM Elements
+        const userEmail = document.getElementById('user-email');
+        const userAvatar = document.getElementById('user-avatar');
+        const userAvatarDropdown = document.getElementById('user-avatar-dropdown');
+        const logoutButton = document.getElementById('logout-button');
+        const profileToggle = document.getElementById('profile-toggle');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const tasksContainer = document.getElementById('tasks-container');
+        const progressCircle = document.getElementById('progress-circle');
+        const progressText = document.getElementById('progress-text');
+        const completedCount = document.getElementById('completed-count');
+        const resetTasksBtn = document.getElementById('reset-tasks');
+
+        // Mental Health Tasks
+        const mentalHealthTasks = [
+            {
+                id: 1,
+                title: "Practice Mindfulness Meditation",
+                description: "Spend 10-15 minutes in quiet meditation. Focus on your breath and observe your thoughts without judgment.",
+                icon: "🧘",
+                category: "Mindfulness",
+                duration: "10-15 minutes"
+            },
+            {
+                id: 2,
+                title: "Express Gratitude",
+                description: "Write down 3 things you're grateful for today. This simple practice can boost your mood and perspective.",
+                icon: "🙏",
+                category: "Positive Thinking",
+                duration: "5 minutes"
+            },
+            {
+                id: 3,
+                title: "Take a Nature Walk",
+                description: "Spend time outdoors, even if it's just a short walk. Nature has proven benefits for mental health.",
+                icon: "🌳",
+                category: "Physical Activity",
+                duration: "20-30 minutes"
+            },
+            {
+                id: 4,
+                title: "Connect with Someone",
+                description: "Reach out to a friend, family member, or colleague. Social connections are vital for mental wellbeing.",
+                icon: "💬",
+                category: "Social Connection",
+                duration: "15 minutes"
+            },
+            {
+                id: 5,
+                title: "Practice Deep Breathing",
+                description: "Take 5 deep breaths, inhaling for 4 counts and exhaling for 6 counts. This activates your relaxation response.",
+                icon: "🫁",
+                category: "Stress Relief",
+                duration: "3-5 minutes"
+            },
+            {
+                id: 6,
+                title: "Limit Screen Time",
+                description: "Take a break from social media and screens. Spend this time doing something you enjoy offline.",
+                icon: "📱",
+                category: "Digital Wellness",
+                duration: "1 hour break"
+            },
+            {
+                id: 7,
+                title: "Learn Something New",
+                description: "Read an article, watch an educational video, or try a new hobby. Learning keeps your mind active and engaged.",
+                icon: "📚",
+                category: "Personal Growth",
+                duration: "15-30 minutes"
+            },
+            {
+                id: 8,
+                title: "Practice Self-Care",
+                description: "Do something kind for yourself - take a warm bath, listen to music, or enjoy a healthy meal mindfully.",
+                icon: "💆",
+                category: "Self-Care",
+                duration: "20 minutes"
+            },
+            {
+                id: 9,
+                title: "Set a Small Goal",
+                description: "Set one achievable goal for today. Accomplishing even small tasks can boost your confidence and mood.",
+                icon: "🎯",
+                category: "Goal Setting",
+                duration: "Varies"
+            },
+            {
+                id: 10,
+                title: "Reflect on Your Day",
+                description: "Take a moment to reflect on your day. What went well? What could you improve? Practice self-compassion.",
+                icon: "🤔",
+                category: "Self-Reflection",
+                duration: "10 minutes"
+            }
+        ];
+
+        let completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+
+        // --- TASK FUNCTIONALITY ---
+        function renderTasks() {
+            const tasksHTML = mentalHealthTasks.map(task => {
+                const isCompleted = completedTasks.includes(task.id);
+                return `
+                    <div class="task-card p-6 ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${task.icon}</span>
+                                <div>
+                                    <h3 class="font-semibold text-lg ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}">${task.title}</h3>
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">${task.category}</span>
+                                </div>
+                            </div>
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       class="w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer" 
+                                       ${isCompleted ? 'checked' : ''}
+                                       data-task-id="${task.id}">
+                            </label>
+                        </div>
+                        <p class="text-gray-600 mb-3 ${isCompleted ? 'line-through' : ''}">${task.description}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">⏱️ ${task.duration}</span>
+                            <span class="text-xs text-gray-400">Task ${task.id}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            tasksContainer.innerHTML = tasksHTML;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const completed = completedTasks.length;
+            const total = mentalHealthTasks.length;
+            const percentage = Math.round((completed / total) * 100);
+            
+            // Update progress circle
+            const circumference = 2 * Math.PI * 36; // r = 36
+            const offset = circumference - (percentage / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+            
+            // Update text
+            progressText.textContent = `${percentage}%`;
+            completedCount.textContent = completed;
+            
+            // Update progress bar color based on completion
+            if (percentage >= 80) {
+                progressCircle.style.stroke = '#12BAAA'; // Green
+            } else if (percentage >= 50) {
+                progressCircle.style.stroke = '#FBDF54'; // Yellow
+            } else {
+                progressCircle.style.stroke = '#377EC0'; // Blue
+            }
+        }
+
+        function toggleTask(taskId) {
+            if (completedTasks.includes(taskId)) {
+                completedTasks = completedTasks.filter(id => id !== taskId);
+            } else {
+                completedTasks.push(taskId);
+            }
+            
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            renderTasks();
+        }
+
+        function resetAllTasks() {
+            completedTasks = [];
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            renderTasks();
+        }
+
+        // Event listeners
+        tasksContainer.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const taskId = parseInt(e.target.dataset.taskId);
+                toggleTask(taskId);
+            }
+        });
+
+        resetTasksBtn.addEventListener('click', resetAllTasks);
+
+        // --- PROFILE DROPDOWN FUNCTIONALITY ---
+        function toggleProfileDropdown() {
+            const isVisible = !profileDropdown.classList.contains('invisible');
+            
+            if (isVisible) {
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            } else {
+                profileDropdown.classList.remove('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.add('opacity-100', 'scale-100');
+            }
+        }
+
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleProfileDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                profileDropdown.classList.remove('opacity-100', 'scale-100');
+            }
+        });
+
+        function updateUserInfo(email) {
+            const avatar = email ? email[0].toUpperCase() : 'U';
+            userEmail.textContent = email || 'user@example.com';
+            userAvatar.textContent = avatar;
+            userAvatarDropdown.textContent = avatar;
+        }
+
+        // Handle logout
+        logoutButton.addEventListener('click', async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    console.error('Error logging out:', error.message);
+                    alert('Error logging out. Please try again.');
+                } else {
+                    console.log('Successfully logged out');
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                console.error('Error during logout:', err);
+                alert('Error logging out. Please try again.');
+            }
+        });
+
+        // Check authentication status
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            updateUserInfo('Not logged in');
+        } else {
+            updateUserInfo(session.user.email);
+        }
+        
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (!session) {
+                // window.location.href = 'login.html'; 
+            } else {
+                updateUserInfo(session.user.email);
+            }
+        });
+
+        // Initialize tasks
+        renderTasks();
+    </script>
+</body>
+</html> 

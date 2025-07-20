@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI Personality Test - MindWell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+        }
+        .question-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        .question-card:focus-within {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+        }
+        input[type="radio"] {
+            appearance: none;
+            border: 2px solid #D1D5DB;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            transition: all 0.2s ease;
+            position: relative;
+            top: 0.2rem;
+        }
+        input[type="radio"]:checked {
+            border-color: #3B82F6;
+            background-color: #3B82F6;
+        }
+        input[type="radio"]:checked::after {
+            content: '';
+            display: block;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .option-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        #resultModal {
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body class="bg-blue-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-6 py-4">
+            <h1 class="text-3xl font-bold text-blue-600 text-center">Discover Your Personality</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 md:px-6 py-12">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-10">
+                <p class="text-lg text-gray-700">Answer the following 15 questions to get a better understanding of your personality type. Choose the option that feels most like you.</p>
+            </div>
+
+            <form id="mbti-form">
+                <!-- Questions will be dynamically inserted here by JavaScript -->
+            </form>
+
+            <div class="text-center mt-8">
+                <button type="button" id="submit-btn" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Show My Result
+                </button>
+                <p id="validation-message" class="text-red-500 mt-4 h-6"></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 text-center transform transition-all scale-95 opacity-0" id="modal-content">
+            <h2 class="text-2xl font-bold text-gray-500">Your Personality Type is:</h2>
+            <p id="mbti-result" class="text-6xl font-extrabold text-blue-600 my-4">ISTJ</p>
+            <p id="mbti-description" class="text-gray-700 text-lg">You are responsible, sincere, and dependable. You have a logical approach to life and enjoy order and organization in all areas.</p>
+            <p id="save-status" class="text-sm text-gray-500 mt-4 h-5"></p>
+            <button id="close-modal-btn" class="mt-8 bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold hover:bg-gray-300 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- SUPABASE SETUP ---
+            const supabaseUrl = 'https://etiobagpcgbcgzogsljt.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aW9iYWdwY2diY2d6b2dzbGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzY2OTksImV4cCI6MjA2ODUxMjY5OX0.JFTuocP7EstARRF7NOw2N4QoxvyP84AcfHx1i4Qr-gI';
+            
+            // CORRECTED: Initialize the Supabase client using v2 syntax
+            const { createClient } = supabase;
+            const supabaseClient = createClient(supabaseUrl, supabaseKey);
+            
+            if (supabaseClient) {
+                console.log('Supabase client initialized.');
+            } else {
+                console.error('Supabase client failed to initialize.');
+            }
+
+            const questions = [
+                // I/E
+                { q: "After a busy social event, you feel:", a1: "Energized and ready for more", v1: "E", a2: "Drained and needing alone time", v2: "I" },
+                { q: "When you are in a group, you tend to:", a1: "Do more of the talking", v1: "E", a2: "Do more of the listening", v2: "I" },
+                { q: "You would describe yourself as:", a1: "Outgoing and expressive", v1: "E", a2: "Private and reserved", v2: "I" },
+                // S/N
+                { q: "You are more interested in:", a1: "What is actual and real", v1: "S", a2: "What is possible and imaginative", v2: "N" },
+                { q: "When you learn, you prefer:", a1: "Practical, hands-on experience", v1: "S", a2: "Abstract concepts and theories", v2: "N" },
+                { q: "You tend to focus on:", a1: "The details and specifics", v1: "S", a2: "The big picture and patterns", v2: "N" },
+                // T/F
+                { q: "When making decisions, you prioritize:", a1: "Logic, reason, and fairness", v1: "T", a2: "Harmony, empathy, and others' feelings", v2: "F" },
+                { q: "You are more ruled by your:", a1: "Head", v1: "T", a2: "Heart", v2: "F" },
+                { q: "In an argument, you are more likely to:", a1: "Stick to the facts", v1: "T", a2: "Consider the people involved", v2: "F" },
+                { q: "You would rather be seen as:", a1: "Just and logical", v1: "T", a2: "Merciful and compassionate", v2: "F" },
+                // J/P
+                { q: "You prefer your life to be:", a1: "Planned and structured", v1: "J", a2: "Spontaneous and flexible", v2: "P" },
+                { q: "When working on a project, you:", a1: "Like to finish things well before the deadline", v1: "J", a2: "Are motivated by the pressure of a deadline", v2: "P" },
+                { q: "You enjoy making:", a1: "Decisions and having things settled", v1: "J", a2: "Discoveries and keeping your options open", v2: "P" },
+                { q: "Your travel style is more:", a1: "A well-planned itinerary", v1: "J", a2: "Go with the flow", v2: "P" },
+                { q: "Your workspace is usually:", a1: "Organized and tidy", v1: "J", a2: "A collection of things you're working on", v2: "P" },
+            ];
+
+            const personalityTypes = {
+                'ISTJ': 'The Inspector: Responsible, sincere, and dependable. You have a logical approach to life and enjoy order and organization.',
+                'ISFJ': 'The Protector: Warm, considerate, and dedicated. You are always ready to protect and defend your loved ones.',
+                'INFJ': 'The Advocate: Quiet, insightful, and inspiring. You have a deep sense of idealism and integrity.',
+                'INTJ': 'The Architect: Imaginative, strategic, and a planner. You have a thirst for knowledge and are a natural problem-solver.',
+                'ISTP': 'The Crafter: Tolerant, flexible, and action-oriented. You are a hands-on learner who enjoys troubleshooting.',
+                'ISFP': 'The Artist: Charming, flexible, and adventurous. You live in the present moment and enjoy new experiences.',
+                'INFP': 'The Mediator: Poetic, kind, and altruistic. You are an idealist who is always looking for the good in things.',
+                'INTP': 'The Thinker: Innovative, curious, and logical. You are absorbed by ideas and have a strong desire for knowledge.',
+                'ESTP': 'The Dynamo: Energetic, perceptive, and direct. You are a doer who loves to be in the center of the action.',
+                'ESFP': 'The Performer: Spontaneous, enthusiastic, and entertaining. You love the spotlight and enjoy engaging with others.',
+                'ENFP': 'The Champion: Enthusiastic, creative, and sociable. You can always find a reason to smile and inspire others.',
+                'ENTP': 'The Debater: Smart, curious, and quick-witted. You can\'t resist an intellectual challenge or a lively debate.',
+                'ESTJ': 'The Supervisor: Organized, punctual, and a natural leader. You are a pillar of the community who likes to get things done.',
+                'ESFJ': 'The Caregiver: Caring, social, and popular. You are attentive to others\' needs and enjoy helping out.',
+                'ENFJ': 'The Protagonist: Charismatic, inspiring, and a natural leader. You are passionate about guiding others to their potential.',
+                'ENTJ': 'The Commander: Bold, imaginative, and strong-willed. You are a decisive leader who finds a way - or makes one.'
+            };
+
+            const form = document.getElementById('mbti-form');
+            questions.forEach((q, index) => {
+                const questionNumber = index + 1;
+                const card = `
+                    <div class="question-card" tabindex="0">
+                        <p class="text-xl font-semibold mb-6">${questionNumber}. ${q.q}</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="option-label text-lg text-gray-700">
+                                    <input type="radio" name="q${questionNumber}" value="${q.v1}">
+                                    <span>${q.a1}</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="option-label text-lg text-gray-700">
+                                    <input type="radio" name="q${questionNumber}" value="${q.v2}">
+                                    <span>${q.a2}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                form.innerHTML += card;
+            });
+
+            const submitBtn = document.getElementById('submit-btn');
+            const validationMessage = document.getElementById('validation-message');
+            const resultModal = document.getElementById('resultModal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const saveStatus = document.getElementById('save-status');
+
+            submitBtn.addEventListener('click', async function () {
+                const formData = new FormData(form);
+                const answers = [];
+                for (let i = 1; i <= questions.length; i++) {
+                    answers.push(formData.get(`q${i}`));
+                }
+
+                if (answers.includes(null)) {
+                    validationMessage.textContent = "Please answer all questions before submitting.";
+                    return;
+                }
+                validationMessage.textContent = "";
+
+                const scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+                answers.forEach(answer => {
+                    if (answer) scores[answer]++;
+                });
+
+                let result = "";
+                result += scores.I >= scores.E ? "I" : "E";
+                result += scores.S >= scores.N ? "S" : "N";
+                result += scores.T >= scores.F ? "T" : "F";
+                result += scores.J >= scores.P ? "P" : "J";
+
+                document.getElementById('mbti-result').textContent = result;
+                document.getElementById('mbti-description').textContent = personalityTypes[result];
+
+                resultModal.style.display = "flex";
+                setTimeout(() => {
+                    modalContent.style.transform = 'scale(1)';
+                    modalContent.style.opacity = '1';
+                }, 50);
+
+                // --- SAVE TO SUPABASE ---
+                if (supabaseClient) {
+                    saveStatus.textContent = 'Saving result...';
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('mbti_results')
+                            .insert([{ 
+                                result: result,
+                                e_score: scores.E,
+                                i_score: scores.I,
+                                s_score: scores.S,
+                                n_score: scores.N,
+                                t_score: scores.T,
+                                f_score: scores.F,
+                                j_score: scores.J,
+                                p_score: scores.P,
+                             }]);
+                        
+                        if (error) throw error;
+
+                        console.log('Result saved successfully:', data);
+                        saveStatus.textContent = 'Result saved!';
+                    } catch (error) {
+                        console.error('Error saving result to Supabase:', error.message);
+                        saveStatus.textContent = 'Could not save result.';
+                    }
+                } else {
+                    saveStatus.textContent = 'Supabase not configured.';
+                }
+            });
+
+            closeModalBtn.addEventListener('click', function() {
+                modalContent.style.transform = 'scale(0.95)';
+                modalContent.style.opacity = '0';
+                setTimeout(() => {
+                    resultModal.style.display = "none";
+                    saveStatus.textContent = '';
+                }, 200);
+            });
+
+            resultModal.addEventListener('click', function(e) {
+                if (e.target === resultModal) {
+                    closeModalBtn.click();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

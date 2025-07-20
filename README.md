@@ -6,7 +6,7 @@ MindfulMe is a comprehensive mental wellness web application designed to help us
 -   **Secure Sign-up and Login:** Users can create an account or log in securely using their email and password. The authentication system includes password validation to ensure strength.
 -   **User Profile:** Once logged in, the application personalizes the experience, displaying the user's email and an avatar. A profile dropdown menu allows users to log out.
 
-**2. Interactive Dashboard (`dashboard.html`):**
+**2. Interactive Dashboard :**
 The central hub of the application provides a holistic overview of the user's mental wellness at a glance.
 -   **Welcome Message:** Greets the user upon logging in.
 -   **Quick-View Cards:**
@@ -17,25 +17,25 @@ The central hub of the application provides a holistic overview of the user's me
 -   **Latest News:** A feed of recent articles related to mental health, which can be refreshed by the user.
 -   **Today's Tasks:** A summary of daily wellbeing tasks to encourage healthy habits.
 
-**3. MBTI Personality Test (`mbti.html`):**
+**3. MBTI Personality Test :**
 This feature allows users to discover their personality type.
 -   **15-Question Test:** Users answer a series of questions to determine their four-letter MBTI type (e.g., ISTJ, ENFP).
 -   **Instant Results:** Upon completion, a modal window displays the resulting personality type and a detailed description.
 -   **Data Storage:** The test results, including individual scores for each dimension (e.g., Introversion/Extraversion, Sensing/Intuition), are saved to the Supabase database.
 
-**4. Mood Tracker (`mood.html`):**
+**4. Mood Tracker :**
 A visually engaging tool for logging daily emotions.
 -   **Emotion Selection:** Users can choose from a grid of ten emotions (e.g., Happy, Calm, Anxious), each represented by a unique SVG icon and color scheme.
 -   **Dynamic Backgrounds:** The page features animated backgrounds and confetti effects that change based on the selected mood, creating an immersive experience.
 -   **Database Integration:** Mood entries are saved to Supabase, linking them to the logged-in user.
 
-**5. Mental Health News (`news.html`):**
+**5. Mental Health News :**
 Keeps users informed with the latest articles and insights on mental wellness.
 -   **Article Feed:** Displays a grid of news articles fetched from a news API, with fallback data to ensure content is always available.
 -   **Infinite Scrolling:** Users can load more articles as they scroll, providing a continuous stream of information.
 -   **Direct Links:** Each article summary includes a link to read the full story on the original source's website.
 
-**6. Wellbeing Tasks (`task.html`):**
+**6. Wellbeing Tasks :**
 A tool designed to help users build healthy habits through daily activities.
 -   **Task List:** Presents ten daily tasks focused on mental health, such as meditation, expressing gratitude, and taking a nature walk.
 -   **Progress Tracking:** Users can check off completed tasks. A progress ring and a counter dynamically update to show the percentage of tasks completed.
